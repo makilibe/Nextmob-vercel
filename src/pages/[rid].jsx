@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 import React, { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/router';
 import Peer from 'skyway-js';
@@ -5,10 +6,13 @@ const peer = new Peer({ key: '00403e5e-fdf0-4ad6-bdf9-88c71127156f' });
 
 export default function room() {
   const localStreamRef = useRef(null);
+  const OtherStreamRef = useRef(null);
 
   let jsLocalStream;
+  let jsOtherStream;
   if (process.browser) {
     jsLocalStream = document.getElementById('js-local-stream');
+    jsOtherStream = document.getElementById('js-Other-stream');
   }
   const localStreamSetting = async () => {
     localStreamRef.current.srcObject = await navigator.mediaDevices.getUserMedia(
@@ -40,14 +44,8 @@ export default function room() {
       console.log(`=== ${peerId} joined ===\n`);
     });
     room.on('stream', async (stream) => {
-      const newVideo = document.createElement('video');
-      newVideo.setAttribute('width', '200px');
-      newVideo.setAttribute('height', '100px');
-      newVideo.srcObject = stream;
-      newVideo.playsInline = true;
-      newVideo.autoplay = true;
-      const element = document.getElementById('navivideos');
-      element.insertAdjacentElement('beforeend', newVideo);
+      OtherStreamRef.current.srcObject = stream;
+      OtherStreamRef.current.play();
     });
   };
 
@@ -69,6 +67,14 @@ export default function room() {
           autoPlay
           muted
           ref={localStreamRef}
+          playsInline
+        ></video>
+        <video
+          id="js-Other-stream"
+          width="400px"
+          autoPlay
+          muted
+          ref={OtherStreamRef}
           playsInline
         ></video>
         <button onClick={JoinTrigger}>開始</button>
