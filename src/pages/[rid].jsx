@@ -4,9 +4,7 @@ import Peer from 'skyway-js';
 const peer = new Peer({ key: '00403e5e-fdf0-4ad6-bdf9-88c71127156f' });
 
 export default function room() {
-  const localStreamRef = (useRef(null) as unknown) as React.MutableRefObject<
-    HTMLMediaElement
-  >;
+  const localStreamRef = useRef(null);
 
   let jsLocalStream;
   if (process.browser) {
