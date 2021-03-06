@@ -122,12 +122,12 @@ const Room = (props) => {
 
   useEffect(() => {
     (async () => {
-      if (peer) {
+      if (peer && roomId) {
         await localStreamSetting();
-        //await JoinTrigger();
+        await JoinTrigger();
       }
     })();
-  }, [peer]);
+  }, [roomId, peer]);
   return (
     <Card>
       <GridList
