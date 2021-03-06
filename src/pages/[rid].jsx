@@ -2,16 +2,48 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/router';
 import Peer from 'skyway-js';
+import {
+  makeStyles,
+  Button,
+  Container,
+  GridListTile,
+  GridListTileBar,
+  GridList,
+  Card,
+} from '@material-ui/core';
 const peer = new Peer({ key: '00403e5e-fdf0-4ad6-bdf9-88c71127156f' });
 
-export default function room() {
+const useStyles = makeStyles({
+  rootContainer: {
+    marginTop: '12px',
+  },
+  remoteStreams: {
+    backgroundColor: 'white',
+    padding: '14px',
+  },
+  roomTitle: {
+    color: 'gray',
+  },
+  roomFooter: {
+    textAlign: 'right',
+    margin: '22px',
+  },
+  videoContainer: {
+    backgroundColor: 'gray',
+  },
+});
+
+const Room = (props) => {
+  const classes = useStyles();
   const localStreamRef = useRef(null);
   const OtherStreamRef = useRef(null);
 
   let jsLocalStream;
+  let jsRemoteStream;
   let jsOtherStream;
   if (process.browser) {
     jsLocalStream = document.getElementById('js-local-stream');
+    jsRemoteStream = document.getElementById('js-remote-streams');
     jsOtherStream = document.getElementById('js-Other-stream');
   }
   const localStreamSetting = async () => {
@@ -44,6 +76,45 @@ export default function room() {
       console.log(`=== ${peerId} joined ===\n`);
     });
     room.on('stream', async (stream) => {
+      const gridListTitleRoot = document.createElement('li');
+      gridListTitleRoot.setAttribute('id', stream.peerId);
+      gridListTitleRoot.setAttribute(
+        'class',
+        'MuiGridListTile-tile-root makeStyles-videoContainer-2'
+      );
+      gridListTitleRoot.setAttribute(
+        'style',
+        'width: 50%; padding: 1px; background-color:gray;'
+      );
+
+      const gridListTitleVideo = document.createElement('div');
+      gridListTitleVideo.setAttribute('class', 'MuiGridListTile-tile');
+      gridListTitleRoot.append(gridListTitleVideo);
+
+      const newVideo = document.createElement('video');
+      newVideo.setAttribute('id', 'js-local-stream');
+      newVideo.srcObject = stream;
+      newVideo.playsInline = true;
+      newVideo.setAttribute('width', '100%');
+      newVideo.setAttribute('height', '100%');
+      gridListTitleVideo.append(newVideo);
+
+      const gridListTitleBar = document.createElement('div');
+      gridListTitleBar.setAttribute(
+        'class',
+        'MuiGridListTileBar-root MuiGridListTileBar-titlePositionBottom'
+      );
+
+      gridListTitleVideo.append(gridListTitleBar);
+      const gridListTitleWrap = document.createElement('div');
+      gridListTitleWrap.setAttribute('class', 'MuiGridListTileBar-titleWrap');
+      gridListTitleBar.append(gridListTitleWrap);
+      const gridListTitle = document.createElement('div');
+      gridListTitle.setAttribute('class', 'MuiGridListTileBar-title');
+
+      jsRemoteStream.append(gridListTitleRoot);
+      await newVideo.play().catch(console.error);
+
       OtherStreamRef.current.srcObject = stream;
       OtherStreamRef.current.play();
     });
@@ -58,7 +129,13 @@ export default function room() {
     })();
   }, [peer]);
   return (
-    <body>
+    <Card>
+      <GridList
+        cellHeight="90vh"
+        id="js-remote-streams"
+        className={classes.remoteStreams}
+        cols={2}
+      ></GridList>
       <div>
         <p id="roomId"></p>
         <video
@@ -79,6 +156,7 @@ export default function room() {
         ></video>
         <button onClick={JoinTrigger}>開始</button>
       </div>
-    </body>
+    </Card>
   );
-}
+};
+export default Room;
