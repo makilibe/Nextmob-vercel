@@ -43,12 +43,14 @@ const Room = (props) => {
   let jsRemoteStream;
   let jsOtherStream;
   let sendmessage;
+  let addmessage;
 
   if (process.browser) {
     jsLocalStream = document.getElementById('js-local-stream');
     jsRemoteStream = document.getElementById('js-remote-streams');
     jsOtherStream = document.getElementById('js-Other-stream');
     sendmessage = document.getElementById('send-message');
+    addmessage = document.getElementById('add-message');
   }
   const localStreamSetting = async () => {
     localStreamRef.current.srcObject = await navigator.mediaDevices.getUserMedia(
@@ -64,12 +66,13 @@ const Room = (props) => {
   const roomId = router.query.rid;
   console.log(roomId);
 
-  const [msg, setmsg] = useState('');
+  //const [msg, setmsg] = useState('');
 
   const JoinTrigger = async () => {
     if (!peer.open) {
       return;
     }
+    let msg = '';
     const room = peer.joinRoom(roomId, {
       mode: 'mesh',
       stream: localStreamRef.current.srcObject,
@@ -154,17 +157,17 @@ const Room = (props) => {
         });
     });
 
-    sendmessage.addEventListener(
-      'click',
-      async (event) => {
-        event.preventDefault();
-        console.log(msg);
-        room.send(msg);
-      },
-      {
-        once: true,
-      }
-    );
+    addmessage.addEventListener('change', async (event) => {
+      event.preventDefault();
+      msg = event.target.value;
+    });
+
+    sendmessage.addEventListener('click', async (event) => {
+      event.preventDefault();
+      console.log(msg);
+      console.log('送信');
+      room.send(msg);
+    });
   };
 
   useEffect(() => {
@@ -202,7 +205,7 @@ const Room = (props) => {
           playsInline
         ></video>
       </div>
-      <TextField onChange={(e) => setmsg(e.target.value)} value={msg} />
+      <TextField id="add-message" />
       <Button variant="contained" id="send-message" color="secondary">
         sousin
       </Button>
