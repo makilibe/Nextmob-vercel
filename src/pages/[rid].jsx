@@ -10,6 +10,7 @@ import {
   GridListTileBar,
   GridList,
   Card,
+  TextField,
 } from '@material-ui/core';
 const peer = new Peer({ key: '00403e5e-fdf0-4ad6-bdf9-88c71127156f' });
 
@@ -41,10 +42,13 @@ const Room = (props) => {
   let jsLocalStream;
   let jsRemoteStream;
   let jsOtherStream;
+  let sendmessage;
+
   if (process.browser) {
     jsLocalStream = document.getElementById('js-local-stream');
     jsRemoteStream = document.getElementById('js-remote-streams');
     jsOtherStream = document.getElementById('js-Other-stream');
+    sendmessage = document.getElementById('send-message');
   }
   const localStreamSetting = async () => {
     localStreamRef.current.srcObject = await navigator.mediaDevices.getUserMedia(
@@ -121,19 +125,46 @@ const Room = (props) => {
 
       OtherStreamRef.current.srcObject = stream;
       OtherStreamRef.current.play();
-
-      room.on('peerLeave', (peerId) => {
-        const remoteVideoContainer = document.getElementById(`${peerId}`);
-
-        remoteVideoContainer.children[0].children[0].srcObject
-          .getTracks()
-          .forEach((track) => track.stop());
-        remoteVideoContainer.children[0].children[0].srcObject = null;
-        remoteVideoContainer.remove();
-
-        console.log(`=== ${peerId} left ===\n`);
-      });
     });
+    room.on('data', ({ data, src }) => {
+      // Show a message sent to the room and who sent
+      console.log(`${src}: ${data}\n`);
+    });
+    room.on('peerLeave', (peerId) => {
+      const remoteVideoContainer = document.getElementById(`${peerId}`);
+
+      remoteVideoContainer.children[0].children[0].srcObject
+        .getTracks()
+        .forEach((track) => track.stop());
+      remoteVideoContainer.children[0].children[0].srcObject = null;
+      remoteVideoContainer.remove();
+
+      console.log(`=== ${peerId} left ===\n`);
+    });
+    room.once('close', () => {
+      console.log('== You left ===\n');
+      jsRemoteStream
+        .querySelectorAll('li:not(.my-video)')
+        .forEach((remoteVideoContainer) => {
+          remoteVideoContainer.children[0].children[0].srcObject
+            .getTracks()
+            .forEach((track) => track.stop());
+          remoteVideoContainer.children[0].children[0].srcObject = null;
+          remoteVideoContainer.remove();
+        });
+    });
+
+    sendmessage.addEventListener(
+      'click',
+      async (event) => {
+        event.preventDefault();
+        console.log(msg);
+        room.send(msg);
+      },
+      {
+        once: true,
+      }
+    );
   };
 
   useEffect(() => {
@@ -171,12 +202,10 @@ const Room = (props) => {
           playsInline
         ></video>
       </div>
-      <input
-        type="text"
-        name="msg"
-        onChange={(e) => setmsg(e.target.value)}
-        value={msg}
-      />
+      <TextField onChange={(e) => setmsg(e.target.value)} value={msg} />
+      <Button variant="contained" id="send-message" color="secondary">
+        sousin
+      </Button>
     </Card>
   );
 };
