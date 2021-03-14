@@ -132,6 +132,9 @@ const Room = (props) => {
     room.on('data', ({ data, src }) => {
       // Show a message sent to the room and who sent
       console.log(`${src}: ${data}\n`);
+      let text = `${data}\n`;
+      var add_text = document.getElementById('t_chat');
+      add_text.value += text;
     });
     room.on('peerLeave', (peerId) => {
       const remoteVideoContainer = document.getElementById(`${peerId}`);
@@ -167,6 +170,9 @@ const Room = (props) => {
       console.log(msg);
       console.log('送信');
       room.send(msg);
+      let text = `${msg}\n`;
+      var add_text = document.getElementById('t_chat');
+      add_text.value += text;
     });
   };
 
@@ -209,6 +215,7 @@ const Room = (props) => {
       <Button variant="contained" id="send-message" color="secondary">
         sousin
       </Button>
+      <textarea readOnly id="t_chat" rows="10" cols="45"></textarea>
     </Card>
   );
 };
