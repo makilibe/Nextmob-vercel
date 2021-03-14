@@ -59,6 +59,9 @@ const Room = (props) => {
   const router = useRouter();
   const roomId = router.query.rid;
   console.log(roomId);
+
+  const [msg, setmsg] = useState('');
+
   const JoinTrigger = async () => {
     if (!peer.open) {
       return;
@@ -75,6 +78,7 @@ const Room = (props) => {
     room.on('peerJoin', (peerId) => {
       console.log(`=== ${peerId} joined ===\n`);
     });
+
     room.on('stream', async (stream) => {
       const gridListTitleRoot = document.createElement('li');
       gridListTitleRoot.setAttribute('id', stream.peerId);
@@ -117,6 +121,18 @@ const Room = (props) => {
 
       OtherStreamRef.current.srcObject = stream;
       OtherStreamRef.current.play();
+
+      room.on('peerLeave', (peerId) => {
+        const remoteVideoContainer = document.getElementById(`${peerId}`);
+
+        remoteVideoContainer.children[0].children[0].srcObject
+          .getTracks()
+          .forEach((track) => track.stop());
+        remoteVideoContainer.children[0].children[0].srcObject = null;
+        remoteVideoContainer.remove();
+
+        console.log(`=== ${peerId} left ===\n`);
+      });
     });
   };
 
@@ -154,8 +170,13 @@ const Room = (props) => {
           ref={OtherStreamRef}
           playsInline
         ></video>
-        <button onClick={JoinTrigger}>開始</button>
       </div>
+      <input
+        type="text"
+        name="msg"
+        onChange={(e) => setmsg(e.target.value)}
+        value={msg}
+      />
     </Card>
   );
 };
