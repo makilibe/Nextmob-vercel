@@ -1,3 +1,4 @@
+/* eslint-disable no-restricted-imports */
 /* eslint-disable no-undef */
 import React, { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/router';
@@ -12,6 +13,7 @@ import {
   Card,
   TextField,
 } from '@material-ui/core';
+import { RecognitionEffect } from '../effects/recognition';
 const peer = new Peer({ key: '00403e5e-fdf0-4ad6-bdf9-88c71127156f' });
 
 const useStyles = makeStyles({
@@ -34,11 +36,11 @@ const useStyles = makeStyles({
   },
 });
 
-const Room = (props) => {
+const Room = () => {
   const classes = useStyles();
   const localStreamRef = useRef(null);
   const OtherStreamRef = useRef(null);
-
+  const recognitionRef = useRef<RecognitionEffect>();
   let jsLocalStream;
   let jsRemoteStream;
   let jsOtherStream;
@@ -73,6 +75,7 @@ const Room = (props) => {
       return;
     }
     let msg = '';
+    let vmsg = '';
     const room = peer.joinRoom(roomId, {
       mode: 'mesh',
       stream: localStreamRef.current.srcObject,
@@ -129,11 +132,18 @@ const Room = (props) => {
       OtherStreamRef.current.srcObject = stream;
       OtherStreamRef.current.play();
     });
+
+    const recognition = (recognitionRef.current = new RecognitionEffect());
+    recognition.onFinal = (str) => {
+      vmsg = str;
+      console.log(str);
+    };
+    console.log(vmsg);
     room.on('data', ({ data, src }) => {
       // Show a message sent to the room and who sent
       console.log(`${src}: ${data}\n`);
-      let text = `${data}\n`;
-      var add_text = document.getElementById('t_chat');
+      const text = `${data}\n`;
+      const add_text = document.getElementById('t_chat');
       add_text.value += text;
     });
     room.on('peerLeave', (peerId) => {
@@ -170,8 +180,8 @@ const Room = (props) => {
       console.log(msg);
       console.log('送信');
       room.send(msg);
-      let text = `${msg}\n`;
-      var add_text = document.getElementById('t_chat');
+      const text = `${msg}\n`;
+      const add_text = document.getElementById('t_chat');
       add_text.value += text;
     });
   };
