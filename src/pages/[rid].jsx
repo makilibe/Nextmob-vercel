@@ -40,6 +40,7 @@ const Room = () => {
   const classes = useStyles();
   const localStreamRef = useRef(null);
   const OtherStreamRef = useRef(null);
+
   const recognitionRef = useRef<RecognitionEffect>();
   let jsLocalStream;
   let jsRemoteStream;
