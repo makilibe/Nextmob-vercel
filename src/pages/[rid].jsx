@@ -40,8 +40,6 @@ const Room = () => {
   const classes = useStyles();
   const localStreamRef = useRef(null);
   const OtherStreamRef = useRef(null);
-
-  const recognitionRef = useRef<RecognitionEffect>();
   let jsLocalStream;
   let jsRemoteStream;
   let jsOtherStream;
@@ -134,12 +132,6 @@ const Room = () => {
       OtherStreamRef.current.play();
     });
 
-    const recognition = (recognitionRef.current = new RecognitionEffect());
-    recognition.onFinal = (str) => {
-      vmsg = str;
-      console.log(str);
-    };
-    console.log(vmsg);
     room.on('data', ({ data, src }) => {
       // Show a message sent to the room and who sent
       console.log(`${src}: ${data}\n`);
@@ -171,6 +163,13 @@ const Room = () => {
         });
     });
 
+    const recognition = new RecognitionEffect();
+    recognition.onFinal = (str) => {
+      vmsg = str;
+      room.send(vmsg);
+      console.log(vmsg);
+    };
+
     addmessage.addEventListener('change', async (event) => {
       event.preventDefault();
       msg = event.target.value;
@@ -180,7 +179,7 @@ const Room = () => {
       event.preventDefault();
       console.log(msg);
       console.log('送信');
-      room.send(msg);
+      room.send(vmsg);
       const text = `${msg}\n`;
       const add_text = document.getElementById('t_chat');
       add_text.value += text;
