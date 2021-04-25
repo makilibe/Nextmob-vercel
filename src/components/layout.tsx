@@ -34,7 +34,7 @@ type LayoutProps = {
 
 const Layout = (props: LayoutProps) => {
   const classes = useStyles();
-  const [currentUser, setCurrentUser] = useState<firebase.User>();
+  const [currentUser, setCurrentUser] = useState(null);
 
   firebase.auth().onAuthStateChanged((user) => {
     if (user) {
