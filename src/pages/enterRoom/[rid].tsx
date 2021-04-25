@@ -39,12 +39,12 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-const enterRoom = (props) => {
+const enterRoom = () => {
   const classes = useStyles();
   const localStreamRef = useRef(null);
   const [userName, setUserName] = useState('');
   const [isDisabledJoin, setIsDisabledJoin] = useState(false);
-  const [currentUser, setCurrentUser] = useState(null);
+  const [currentUser, setCurrentUser] = useState<firebase.User | null>();
 
   firebase.auth().onAuthStateChanged((user) => {
     if (user) {
