@@ -44,7 +44,7 @@ const enterRoom = () => {
   const localStreamRef = useRef(null);
   const [userName, setUserName] = useState('');
   const [isDisabledJoin, setIsDisabledJoin] = useState(false);
-  const [currentUser, setCurrentUser] = useState<firebase.User | null>();
+  const [currentUser, setCurrentUser] = useState(null);
 
   firebase.auth().onAuthStateChanged((user) => {
     if (user) {
