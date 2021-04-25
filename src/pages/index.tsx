@@ -69,11 +69,13 @@ const makeroom = () => {
     }
   });
 
-  const handleRoomNameChange = (event) => {
+  const handleRoomNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setRoomName(event.target.value);
   };
 
-  const handleAdminNameChange = (event) => {
+  const handleAdminNameChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     setAdminName(event.target.value);
   };
 
