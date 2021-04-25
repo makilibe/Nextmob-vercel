@@ -2,7 +2,7 @@
 /* eslint-disable no-undef */
 import React, { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/router';
-import Peer from 'skyway-js';
+import { SKYWAY_API_KEY } from '../../env';
 import {
   makeStyles,
   Button,
@@ -13,8 +13,16 @@ import {
   Card,
   TextField,
 } from '@material-ui/core';
-import { RecognitionEffect } from '../effects/recognition';
-const peer = new Peer({ key: '00403e5e-fdf0-4ad6-bdf9-88c71127156f' });
+import {
+  selectRoomDocument,
+  selectUser,
+  updateRoomDocumentWhenJoined,
+  updateRoomDocumentWhenLeaved,
+} from '../../database';
+import { RecognitionEffect } from '../../effects/recognition';
+import Layout from '../../components/layout';
+import firebase from '../../plugins/firebase';
+import { getCurrentUser } from '../../firebase/Authentication';
 
 const useStyles = makeStyles({
   rootContainer: {
@@ -40,18 +48,23 @@ const Room = () => {
   const classes = useStyles();
   const localStreamRef = useRef(null);
   const OtherStreamRef = useRef(null);
+  let Peer;
   let jsLocalStream;
   let jsRemoteStream;
   let jsOtherStream;
   let sendmessage;
   let addmessage;
+  let changemedia;
+  let flag;
 
   if (process.browser) {
+    Peer = require('skyway-js');
     jsLocalStream = document.getElementById('js-local-stream');
     jsRemoteStream = document.getElementById('js-remote-streams');
     jsOtherStream = document.getElementById('js-Other-stream');
     sendmessage = document.getElementById('send-message');
     addmessage = document.getElementById('add-message');
+    changemedia = document.getElementById('change-media');
   }
   const localStreamSetting = async () => {
     localStreamRef.current.srcObject = await navigator.mediaDevices.getUserMedia(
@@ -61,7 +74,24 @@ const Room = () => {
       }
     );
     await localStreamRef.current.play();
+    flag = 0;
   };
+
+  const localStreamOff = () => {
+    // ローカルストリームを複数回オン, オフにしたとき, current = nullになるため
+    if (localStreamRef.current) {
+      if (localStreamRef.current.srcObject instanceof MediaStream) {
+        localStreamRef.current.srcObject
+          .getTracks()
+          .forEach((track) => track.stop());
+      }
+    }
+  };
+
+  const [userName, setUserName] = useState('');
+  const [roomName, setRoomName] = useState('');
+  const [peer, setPeer] = useState(null);
+  const [currentUser, setCurrentUser] = useState(null);
 
   const router = useRouter();
   const roomId = router.query.rid;
@@ -69,10 +99,23 @@ const Room = () => {
 
   //const [msg, setmsg] = useState('');
 
+  firebase.auth().onAuthStateChanged((user) => {
+    if (user) {
+      setCurrentUser(user);
+    } else {
+      router.push(`/enterRoom/${roomId}`);
+    }
+  });
+
   const JoinTrigger = async () => {
     if (!peer.open) {
       return;
     }
+
+    const user = await getCurrentUser();
+    const userDocument = await selectUser(user.uid);
+    await updateRoomDocumentWhenJoined(roomId, userDocument);
+
     let msg = '';
     let vmsg = '';
     const room = peer.joinRoom(roomId, {
@@ -184,7 +227,50 @@ const Room = () => {
       const add_text = document.getElementById('t_chat');
       add_text.value += text;
     });
+
+    changemedia.addEventListener('click', async (event) => {
+      event.preventDefault();
+      ScreenStreamSetting();
+    });
   };
+
+  const setUpUsernameInput = async () => {
+    const user = await getCurrentUser();
+    const userDocument = await selectUser(user.uid);
+    setUserName(userDocument.nickname);
+  };
+
+  const setUpRoomInfo = async () => {
+    const roomDoc = await selectRoomDocument(roomId);
+    const rd = await roomDoc.get();
+    console.log(rd.data().name);
+    setRoomName(rd.data().name);
+  };
+
+  const ScreenStreamSetting = async () => {
+    if (flag == 0) {
+      localStreamRef.current.srcObject = await navigator.mediaDevices.getDisplayMedia(
+        {
+          audio: true,
+          video: true,
+        }
+      );
+      await localStreamRef.current.play();
+      flag = 1;
+    } else {
+      localStreamSetting();
+    }
+  };
+
+  useEffect(() => {
+    (async () => {
+      if (currentUser) {
+        await setUpUsernameInput();
+        await setUpRoomInfo();
+        setPeer(new Peer(currentUser.uid, { key: SKYWAY_API_KEY }));
+      }
+    })();
+  }, [currentUser]);
 
   useEffect(() => {
     (async () => {
@@ -195,38 +281,43 @@ const Room = () => {
     })();
   }, [roomId, peer]);
   return (
-    <Card>
-      <GridList
-        cellHeight="90vh"
-        id="js-remote-streams"
-        className={classes.remoteStreams}
-        cols={2}
-      ></GridList>
-      <div>
-        <p id="roomId"></p>
-        <video
-          id="js-local-stream"
-          width="400px"
-          autoPlay
-          muted
-          ref={localStreamRef}
-          playsInline
-        ></video>
-        <video
-          id="js-Other-stream"
-          width="400px"
-          autoPlay
-          muted
-          ref={OtherStreamRef}
-          playsInline
-        ></video>
-      </div>
-      <TextField id="add-message" />
-      <Button variant="contained" id="send-message" color="secondary">
-        sousin
-      </Button>
-      <textarea readOnly id="t_chat" rows="10" cols="45"></textarea>
-    </Card>
+    <Layout>
+      <Card>
+        <GridList
+          cellHeight="90vh"
+          id="js-remote-streams"
+          className={classes.remoteStreams}
+          cols={2}
+        ></GridList>
+        <div>
+          <p id="roomId"></p>
+          <video
+            id="js-local-stream"
+            width="400px"
+            autoPlay
+            muted
+            ref={localStreamRef}
+            playsInline
+          ></video>
+          <video
+            id="js-Other-stream"
+            width="400px"
+            autoPlay
+            muted
+            ref={OtherStreamRef}
+            playsInline
+          ></video>
+        </div>
+        <TextField id="add-message" />
+        <Button variant="contained" id="send-message" color="secondary">
+          sousin
+        </Button>
+        <Button variant="contained" id="change-media" color="secondary">
+          変更
+        </Button>
+        <textarea readOnly id="t_chat" rows="10" cols="45"></textarea>
+      </Card>
+    </Layout>
   );
 };
 export default Room;
