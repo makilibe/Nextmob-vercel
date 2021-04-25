@@ -7,8 +7,7 @@ export interface RoomDocument {
 
 export interface UserDocument {
   uid: string;
-  nickname: string;
+  nickname: string | null;
   introduction: string;
   evaluation: number;
-  driver: boolean;
 }

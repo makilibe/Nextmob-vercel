@@ -24,6 +24,7 @@ export const handleGoogleLogin = async () => {
       nickname: userObj.displayName,
       introduction: '初めまして！よろしくお願いします！',
       evaluation: 3,
+      driver: false,
     };
     await insertUser(userDoc);
   }
