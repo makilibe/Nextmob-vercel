@@ -59,7 +59,7 @@ const makeroom = () => {
   const [roomUUID, setRoomUUID] = useState('');
 
   const [currentUser, setCurrentUser] = useState<firebase.User | null>();
-  const [adminName, setAdminName] = useState('');
+  const [adminName, setAdminName] = useState<any | null>(null);
 
   firebase.auth().onAuthStateChanged((user) => {
     if (user) {
