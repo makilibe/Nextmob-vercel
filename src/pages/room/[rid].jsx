@@ -211,6 +211,9 @@ const Room = () => {
       vmsg = str;
       room.send(vmsg);
       console.log(vmsg);
+      const text = `${vmsg}\n`;
+      const add_text = document.getElementById('t_chat');
+      add_text.value += text;
     };
 
     addmessage.addEventListener('change', async (event) => {
@@ -222,7 +225,7 @@ const Room = () => {
       event.preventDefault();
       console.log(msg);
       console.log('送信');
-      room.send(vmsg);
+      room.send(msg);
       const text = `${msg}\n`;
       const add_text = document.getElementById('t_chat');
       add_text.value += text;
