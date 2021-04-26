@@ -234,7 +234,7 @@ const Room = () => {
     changemedia.addEventListener('click', async (event) => {
       event.preventDefault();
       ScreenStreamSetting();
-      room.replaceStream(stream);
+      room.replaceStream(localStreamRef.current.srcObject);
     });
   };
 
