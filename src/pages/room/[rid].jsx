@@ -132,6 +132,14 @@ const Room = () => {
     });
 
     room.on('stream', async (stream) => {
+      const remoteVideoContainer = document.getElementById(`${stream.peerId}`);
+
+      remoteVideoContainer.children[0].children[0].srcObject
+        .getTracks()
+        .forEach((track) => track.stop());
+      remoteVideoContainer.children[0].children[0].srcObject = null;
+      remoteVideoContainer.remove();
+
       const gridListTitleRoot = document.createElement('li');
       gridListTitleRoot.setAttribute('id', stream.peerId);
       gridListTitleRoot.setAttribute(
