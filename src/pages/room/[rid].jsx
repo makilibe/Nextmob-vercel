@@ -262,7 +262,7 @@ const Room = () => {
       await localStreamRef.current.play();
       flag = 1;
     } else {
-      localStreamSetting();
+      await localStreamSetting();
     }
   };
 
