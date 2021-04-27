@@ -57,6 +57,11 @@ const Room = () => {
   let changemedia;
   let flag;
 
+  let startScreenShareTrigger;
+  let stopScreenShareTrigger;
+  let remoteVideos;
+  let remoteScreens;
+
   if (process.browser) {
     Peer = require('skyway-js');
     jsLocalStream = document.getElementById('js-local-stream');
@@ -65,6 +70,19 @@ const Room = () => {
     sendmessage = document.getElementById('send-message');
     addmessage = document.getElementById('add-message');
     changemedia = document.getElementById('change-media');
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    startScreenShareTrigger = document.getElementById(
+      'js-startScreenShare-trigger'
+    );
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    stopScreenShareTrigger = document.getElementById(
+      'js-stopScreenShare-trigger'
+    );
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    remoteVideos = document.getElementById('js-remote-streams');
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    remoteScreens = document.getElementById('js-remote-screen-streams');
   }
   const localStreamSetting = async () => {
     localStreamRef.current.srcObject = await navigator.mediaDevices.getUserMedia(
@@ -76,6 +94,8 @@ const Room = () => {
     await localStreamRef.current.play();
     flag = 0;
   };
+
+  let screenShareStream;
 
   const localStreamOff = () => {
     // ローカルストリームを複数回オン, オフにしたとき, current = nullになるため
@@ -244,6 +264,99 @@ const Room = () => {
       await ScreenStreamSetting();
       room.replaceStream(localStreamRef.current.srcObject);
     });
+
+    let screenShareRoomInstance = await joinScreenShare();
+
+    startScreenShareTrigger.addEventListener('click', onClickStartScreenShare, {
+      once: true,
+    });
+
+    async function onClickStartScreenShare() {
+      screenShareStream = await navigator.mediaDevices.getDisplayMedia({
+        video: {},
+      });
+      screenShareRoomInstance.close();
+      screenShareRoomInstance = null;
+      screenShareRoomInstance = joinScreenShare(screenShareStream);
+      stopScreenShareTrigger.addEventListener('click', onClickStopScreenShare, {
+        once: true,
+      });
+
+      localVideo.srcObject = screenShareStream;
+      await localVideo.play().catch(console.error);
+    }
+
+    async function onClickStopScreenShare() {
+      let screenShareStreamTrack = screenShareStream.getVideoTracks()[0];
+      screenShareStreamTrack.stop();
+      screenShareStream = null;
+      screenShareRoomInstance.close();
+      screenShareRoomInstance = null;
+      screenShareRoomInstance = joinScreenShare();
+      startScreenShareTrigger.addEventListener(
+        'click',
+        onClickStartScreenShare,
+        { once: true }
+      );
+
+      localVideo.srcObject = localStream;
+      await localVideo.play().catch(console.error);
+    }
+
+    function joinScreenShare(screenShareStream = null) {
+      const screenShareRoomId = roomId.value + '_screen';
+      // eslint-disable-next-line no-redeclare
+      let screenShareRoom = null;
+      if (screenShareStream === null) {
+        screenShareRoom = peer.joinRoom(screenShareRoomId, {
+          mode: 'mesh',
+        });
+      } else {
+        screenShareRoom = peer.joinRoom(screenShareRoomId, {
+          mode: 'mesh',
+          stream: screenShareStream,
+        });
+      }
+
+      // eslint-disable-next-line @typescript-eslint/no-empty-function
+      screenShareRoom.once('open', () => {});
+      // eslint-disable-next-line @typescript-eslint/no-empty-function
+      screenShareRoom.on('peerJoin', (peerId) => {});
+
+      // Render remote stream for new peer join in the room
+      screenShareRoom.on('stream', async (stream) => {
+        const newVideo = document.createElement('video');
+        newVideo.srcObject = stream;
+        newVideo.playsInline = true;
+        // mark peerId to find it later at peerLeave event
+        newVideo.setAttribute('data-peer-id-screen', stream.peerId);
+        remoteScreens.append(newVideo);
+        await newVideo.play().catch(console.error);
+      });
+
+      // for closing room members
+      screenShareRoom.on('peerLeave', (peerId) => {
+        const screenShareVideo = remoteScreens.querySelector(
+          `[data-peer-id-screen="${peerId}"]`
+        );
+        screenShareVideo.srcObject.getTracks().forEach((track) => track.stop());
+        screenShareVideo.srcObject = null;
+        screenShareVideo.remove();
+      });
+
+      // for closing myself
+      screenShareRoom.once('close', () => {
+        Array.from(remoteScreens.children).forEach((screenShareVideo) => {
+          screenShareVideo.srcObject
+            .getTracks()
+            .forEach((track) => track.stop());
+          screenShareVideo.srcObject = null;
+          screenShareVideo.remove();
+        });
+      });
+
+      return screenShareRoom;
+    }
   };
 
   const setUpUsernameInput = async () => {
@@ -312,6 +425,7 @@ const Room = () => {
             ref={localStreamRef}
             playsInline
           ></video>
+          <div className="remote-streams" id="js-remote-screen-streams"></div>
         </div>
         <TextField id="add-message" />
         <Button variant="contained" id="send-message" color="secondary">
@@ -319,6 +433,20 @@ const Room = () => {
         </Button>
         <Button variant="contained" id="change-media" color="secondary">
           変更
+        </Button>
+        <Button
+          variant="contained"
+          id="js-startScreenShare-trigger"
+          color="secondary"
+        >
+          画面共有開始
+        </Button>
+        <Button
+          variant="contained"
+          id="js-stopScreenShare-trigger"
+          color="secondary"
+        >
+          画面共有停止
         </Button>
         <textarea readOnly id="t_chat" rows="10" cols="45"></textarea>
       </Card>
