@@ -90,7 +90,6 @@ const Room = () => {
     flag = 0;
   };
 
-  let localStream = localStreamRef.current.srcObject;
   let screenShareStream;
 
   const localStreamOff = () => {
@@ -271,8 +270,7 @@ const Room = () => {
         once: true,
       });
 
-      localStreamRef.current.srcObject = screenShareStream;
-      await localStreamRef.current.srcObject.play().catch(console.error);
+      await localStreamSetting();
     }
 
     async function onClickStopScreenShare() {
