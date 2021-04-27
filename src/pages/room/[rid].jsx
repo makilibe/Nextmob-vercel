@@ -90,6 +90,7 @@ const Room = () => {
     flag = 0;
   };
 
+  let localStream = localStreamRef.current.srcObject;
   let screenShareStream;
 
   const localStreamOff = () => {
