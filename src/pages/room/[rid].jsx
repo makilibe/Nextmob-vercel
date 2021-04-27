@@ -270,7 +270,8 @@ const Room = () => {
         once: true,
       });
 
-      await localStreamSetting();
+      localStreamRef.current.srcObject = screenShareStream;
+      await localStreamRef.current.srcObject.play().catch(console.error);
     }
 
     async function onClickStopScreenShare() {
@@ -286,8 +287,7 @@ const Room = () => {
         { once: true }
       );
 
-      localStreamRef.current.srcObject = localStream;
-      await localStreamRef.current.srcObject.play().catch(console.error);
+      await localStreamSetting();
     }
 
     function joinScreenShare(screenShareStream = null) {
