@@ -59,7 +59,6 @@ const Room = () => {
 
   let startScreenShareTrigger;
   let stopScreenShareTrigger;
-  let remoteVideos;
   let remoteScreens;
 
   if (process.browser) {
@@ -69,8 +68,6 @@ const Room = () => {
     jsOtherStream = document.getElementById('js-Other-stream');
     sendmessage = document.getElementById('send-message');
     addmessage = document.getElementById('add-message');
-    changemedia = document.getElementById('change-media');
-
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     startScreenShareTrigger = document.getElementById(
       'js-startScreenShare-trigger'
@@ -79,8 +76,6 @@ const Room = () => {
     stopScreenShareTrigger = document.getElementById(
       'js-stopScreenShare-trigger'
     );
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    remoteVideos = document.getElementById('js-remote-streams');
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     remoteScreens = document.getElementById('js-remote-screen-streams');
   }
@@ -258,13 +253,6 @@ const Room = () => {
       add_text.value += text;
     });
 
-    changemedia.addEventListener('click', async (event) => {
-      event.preventDefault();
-      await localStreamOff();
-      await ScreenStreamSetting();
-      room.replaceStream(localStreamRef.current.srcObject);
-    });
-
     let screenShareRoomInstance = await joinScreenShare();
 
     startScreenShareTrigger.addEventListener('click', onClickStartScreenShare, {
@@ -282,8 +270,8 @@ const Room = () => {
         once: true,
       });
 
-      localVideo.srcObject = screenShareStream;
-      await localVideo.play().catch(console.error);
+      localStreamRef.current.srcObject = screenShareStream;
+      await localStreamRef.current.srcObject.play().catch(console.error);
     }
 
     async function onClickStopScreenShare() {
@@ -299,8 +287,8 @@ const Room = () => {
         { once: true }
       );
 
-      localVideo.srcObject = localStream;
-      await localVideo.play().catch(console.error);
+      localStreamRef.current.srcObject = localStream;
+      await localStreamRef.current.srcObject.play().catch(console.error);
     }
 
     function joinScreenShare(screenShareStream = null) {
@@ -372,21 +360,6 @@ const Room = () => {
     setRoomName(rd.data().name);
   };
 
-  const ScreenStreamSetting = async () => {
-    if (flag == 0) {
-      localStreamRef.current.srcObject = await navigator.mediaDevices.getDisplayMedia(
-        {
-          audio: true,
-          video: true,
-        }
-      );
-      await localStreamRef.current.play();
-      flag = 1;
-    } else {
-      await localStreamSetting();
-    }
-  };
-
   useEffect(() => {
     (async () => {
       if (currentUser) {
@@ -430,9 +403,6 @@ const Room = () => {
         <TextField id="add-message" />
         <Button variant="contained" id="send-message" color="secondary">
           sousin
-        </Button>
-        <Button variant="contained" id="change-media" color="secondary">
-          変更
         </Button>
         <Button
           variant="contained"
