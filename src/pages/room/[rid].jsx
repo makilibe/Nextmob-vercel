@@ -133,6 +133,7 @@ const Room = () => {
 
     room.on('stream', async (stream) => {
       const gridListTitleRoot = document.createElement('li');
+
       gridListTitleRoot.setAttribute('id', stream.peerId);
       gridListTitleRoot.setAttribute(
         'class',
@@ -140,7 +141,7 @@ const Room = () => {
       );
       gridListTitleRoot.setAttribute(
         'style',
-        'width: 50%; padding: 1px; background-color:gray;'
+        'width: 320px; padding: 1px; background-color:gray;'
       );
 
       const gridListTitleVideo = document.createElement('div');
@@ -151,8 +152,8 @@ const Room = () => {
       newVideo.setAttribute('id', 'js-local-stream');
       newVideo.srcObject = stream;
       newVideo.playsInline = true;
-      newVideo.setAttribute('width', '100%');
-      newVideo.setAttribute('height', '100%');
+      newVideo.setAttribute('width', '320px');
+      newVideo.setAttribute('height', '240px');
       gridListTitleVideo.append(newVideo);
 
       const gridListTitleBar = document.createElement('div');
@@ -167,6 +168,12 @@ const Room = () => {
       gridListTitleBar.append(gridListTitleWrap);
       const gridListTitle = document.createElement('div');
       gridListTitle.setAttribute('class', 'MuiGridListTileBar-title');
+
+      console.log(stream.peerId);
+      const user = await selectUser(stream.peerId);
+      const userName = document.createTextNode(user.nickname);
+      gridListTitle.append(userName);
+      gridListTitleWrap.append(gridListTitle);
 
       jsRemoteStream.append(gridListTitleRoot);
       await newVideo.play().catch(console.error);
@@ -298,18 +305,11 @@ const Room = () => {
           <p id="roomId"></p>
           <video
             id="js-local-stream"
-            width="400px"
+            width="320"
+            height="240"
             autoPlay
             muted
             ref={localStreamRef}
-            playsInline
-          ></video>
-          <video
-            id="js-Other-stream"
-            width="400px"
-            autoPlay
-            muted
-            ref={OtherStreamRef}
             playsInline
           ></video>
         </div>
