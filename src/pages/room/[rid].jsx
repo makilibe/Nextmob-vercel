@@ -194,8 +194,8 @@ const Room = () => {
       jsRemoteStream.append(gridListTitleRoot);
       await newVideo.play().catch(console.error);
 
-      OtherStreamRef.current.srcObject = stream;
-      OtherStreamRef.current.play();
+      //OtherStreamRef.current.srcObject = stream;
+      //OtherStreamRef.current.play();
     });
 
     room.on('data', ({ data, src }) => {
@@ -278,7 +278,7 @@ const Room = () => {
         );
 
         localStreamRef.current.srcObject = screenShareStream;
-        await localStreamRef.current.srcObject.play().catch(console.error);
+        await localStreamRef.current.play().catch(console.error);
       } else {
         alert('あなたはドライバーではありません');
         startScreenShareTrigger.addEventListener(
