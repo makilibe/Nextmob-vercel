@@ -18,11 +18,13 @@ import {
   selectUser,
   updateRoomDocumentWhenJoined,
   updateRoomDocumentWhenLeaved,
+  checkDriver,
 } from '../../database';
 import { RecognitionEffect } from '../../effects/recognition';
 import Layout from '../../components/layout';
 import firebase from '../../plugins/firebase';
 import { getCurrentUser } from '../../firebase/Authentication';
+import { AirplanemodeInactiveRounded, AlarmTwoTone } from '@material-ui/icons';
 
 const useStyles = makeStyles({
   rootContainer: {
@@ -130,6 +132,9 @@ const Room = () => {
     const user = await getCurrentUser();
     const userDocument = await selectUser(user.uid);
     await updateRoomDocumentWhenJoined(roomId, userDocument);
+
+    const admin = await checkDriver(roomId);
+    console.log(currentUser.uid);
 
     let msg = '';
     let vmsg = '';
@@ -260,18 +265,34 @@ const Room = () => {
     });
 
     async function onClickStartScreenShare() {
-      screenShareStream = await navigator.mediaDevices.getDisplayMedia({
-        video: {},
-      });
-      screenShareRoomInstance.close();
-      screenShareRoomInstance = null;
-      screenShareRoomInstance = joinScreenShare(screenShareStream);
-      stopScreenShareTrigger.addEventListener('click', onClickStopScreenShare, {
-        once: true,
-      });
+      if (currentUser.uid === admin.get('adminUid')) {
+        console.log('check');
+        screenShareStream = await navigator.mediaDevices.getDisplayMedia({
+          video: {},
+        });
+        screenShareRoomInstance.close();
+        screenShareRoomInstance = null;
+        screenShareRoomInstance = joinScreenShare(screenShareStream);
+        stopScreenShareTrigger.addEventListener(
+          'click',
+          onClickStopScreenShare,
+          {
+            once: true,
+          }
+        );
 
-      localStreamRef.current.srcObject = screenShareStream;
-      await localStreamRef.current.srcObject.play().catch(console.error);
+        localStreamRef.current.srcObject = screenShareStream;
+        await localStreamRef.current.srcObject.play().catch(console.error);
+      } else {
+        alert('あなたはドライバーではありません');
+        startScreenShareTrigger.addEventListener(
+          'click',
+          onClickStartScreenShare,
+          {
+            once: true,
+          }
+        );
+      }
     }
 
     async function onClickStopScreenShare() {

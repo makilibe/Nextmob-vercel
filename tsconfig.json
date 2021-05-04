@@ -29,5 +29,5 @@
   "include": [
     "next-env.d.ts",
     "**/*.ts",
-    "**/*.tsx", "src/pages/room/[rid], "]
+    "**/*.tsx", "src/pages/room/[rid], ", "src/pages/index.jsx"]
 }

@@ -36,6 +36,11 @@ export const selectUser = async (uid: string) => {
   return user.data() as UserDocument;
 };
 
+export const checkDriver = async (docId: string) => {
+  const db = firebase.firestore();
+  return db.collection('rooms').doc(docId).get();
+};
+
 export const updateRoomDocumentWhenJoined = async (
   docId: string,
   UserDocument: UserDocument
