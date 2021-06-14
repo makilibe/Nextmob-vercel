@@ -132,7 +132,7 @@ const enterRoom = () => {
                   id="js-local-stream"
                   muted
                   ref={localStreamRef}
-                  playsinline
+                  playsInline
                   width="100%"
                   height="100%"
                 />

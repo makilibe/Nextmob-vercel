@@ -338,6 +338,26 @@ const Room = () => {
         await newVideo.play().catch(console.error);
       });
 
+      let pointscreen = document.getElementById('js-remote-screen-streams');
+
+      if (pointscreen != null) {
+        pointscreen.addEventListener('click', function (e) {
+          let offsetX = e.offsetX; // =>要素左上からのx座標
+          let offsetY = e.offsetY; // =>要素左上からのy座標
+          let pageX = e.pageX; // =>ウィンドウ左上からのx座標
+          let pageY = e.pageY; // =>ウィンドウ左上からのy座標
+          let clientX = e.clientX; // =>ページ左上からのx座標
+          let clientY = e.clientY; // =>ページ左上からのy座標
+          console.log(offsetX, offsetY, pageX, pageY, clientX, clientY);
+          screenShareRoom.send(offsetX);
+        });
+      }
+
+      screenShareRoom.on('data', ({ data, src }) => {
+        // Show a message sent to the room and who sent
+        console.log(`${src}: ${data}\n`);
+      });
+
       // for closing room members
       screenShareRoom.on('peerLeave', (peerId) => {
         const screenShareVideo = remoteScreens.querySelector(
@@ -398,11 +418,13 @@ const Room = () => {
     <Layout>
       <Card>
         <GridList
-          cellHeight="90vh"
+          cellHeight={90}
           id="js-remote-streams"
           className={classes.remoteStreams}
           cols={2}
-        ></GridList>
+        >
+          {' '}
+        </GridList>
         <div>
           <p id="roomId"></p>
           <video

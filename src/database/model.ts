@@ -7,7 +7,7 @@ export interface RoomDocument {
 
 export interface UserDocument {
   uid: string;
-  nickname: string | null;
+  nickname: string;
   introduction: string;
   evaluation: number;
 }
